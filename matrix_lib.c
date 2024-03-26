@@ -22,8 +22,6 @@
 #include <stdlib.h>
 #include "matrix_lib.h"
 
-// Segfault in loop iterations maybe because of the way I'm incrementing the pointers
-// or because of matrix C not being properly initialized
 int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
 {
     if (a->width != b->height)
@@ -49,17 +47,18 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
         // seta iterador de C para o comeco da linha atual de C
         iterC = iniC + i * c->width;
 
-        iterA++; // toda vez que a linha de B muda, passa para o proximo elemento de A
-
         // itera pelos elementos na linha atual de C e D
         for (int k = 0; k < c->width; k++)
         {
+          // printf("%f += %f * %f\n", *iterC, *iterA, *iterB);
           *iterC++ += *iterB++ * *iterA;
         }
+
+        iterA++; // toda vez que a linha de B muda, passa para o proximo elemento de A
       }
     }
-
-    return -1;
+  
+    return 1;
 }
 
 // TODO
@@ -67,11 +66,11 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
 {
     float *p = matrix->rows;
-    
+  
     for (long i = 0; i < matrix->height*matrix->width; i++)
     {
         *p++ *= scalar_value;
     }
 
-    return -1;
+    return 1;
 }
