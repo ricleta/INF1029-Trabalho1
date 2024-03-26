@@ -38,7 +38,6 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
     float *iterB = b->rows;
     float *iterC = c->rows;
 
-int count = 0;
     // ocorre numero de vezes = numero de linhas de A
     for (int i = 0; i < a->height; i++)
     {
@@ -51,9 +50,9 @@ int count = 0;
         iterC = iniC + i * c->width;
 
         iterA++; // toda vez que a linha de B muda, passa para o proximo elemento de A
-        
+
         // itera pelos elementos na linha atual de C e D
-        for (int k = 0; k < c->width; i++)
+        for (int k = 0; k < c->width; k++)
         {
           *iterC++ += *iterB++ * *iterA;
         }
