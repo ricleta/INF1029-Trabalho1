@@ -82,10 +82,15 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
 {
     float *p = matrix->rows;
-  
-    for (long i = 0; i < matrix->height*matrix->width; i++)
+    __m256 scalar = _mm256_set1_ps(scalar_value);
+    __m256 aux;
+
+    for (long i = 0; i < matrix->height*matrix->width; i += 8)
     {
-      *p++ *= scalar_value;
+      aux = _mm256_loadu_ps(p);
+      aux = _mm256_mul_ps(aux, scalar);
+      _mm256_storeu_ps(p, aux);
+      p += 8;
     }
 
     return 1;
