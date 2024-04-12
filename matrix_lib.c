@@ -56,8 +56,11 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
         // itera pelos elementos na linha atual de C e D
         for (int k = 0; k < c->width; k += 8)
         {
+          // carrega 8 elementos de B e C
           aux_b = _mm256_loadu_ps(iterB);
           aux_c = _mm256_loadu_ps(iterC);
+
+          // multiplica e soma elemento atual de A pelos elemtos de B 
           aux_c = _mm256_fmadd_ps(aux_a, aux_b, aux_c);
           _mm256_storeu_ps(iterC, aux_c);
 
