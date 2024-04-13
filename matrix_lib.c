@@ -21,7 +21,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <immintrin.h>
+#include <pthread.h>
 #include "matrix_lib.h"
+
+#define NUM_THREADS 4
+
+typedef struct _scalar_thread_args
+{
+    int thread_id;
+    float scalar_value;
+    struct matrix *matrix;
+} Scalar_thread_args;
 
 int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
 {
@@ -77,21 +87,60 @@ int matrix_matrix_mult(struct matrix *a, struct matrix *b, struct matrix *c)
     return 1;
 }
 
-// TODO
-// Atualizar para specs do trabalho
+// Funcao auxiliar para multiplicacao de matriz por escalar chamada pelas threads
+void *aux_scalar_mult(Scalar_thread_args *args)
+{
+  int thread_id = args->thread_id;
+  int matrix_size = args->matrix->height * args->matrix->width;
+  int ini = thread_id * (matrix_size / NUM_THREADS);
+  int end = (thread_id + 1) * (matrix_size / NUM_THREADS);
+  
+  // Iterator depends on the thread running, adding ini indicates the appropriate start for the thread
+  float *p = args->matrix->rows + ini;
+
+  __m256 scalar = _mm256_set1_ps(args->scalar_value);
+  __m256 aux;
+  
+  // Perform scalar multiplication on the assigned portion of the matrix
+  for (int i = ini; i < end ; i += 8)
+  {
+    aux = _mm256_loadu_ps(p);
+    aux = _mm256_mul_ps(aux, scalar);
+    _mm256_storeu_ps(p, aux);
+    p += 8;
+  }
+
+  pthread_exit(NULL);
+}
+
 int scalar_matrix_mult(float scalar_value, struct matrix *matrix)
 {
-    float *p = matrix->rows;
-    __m256 scalar = _mm256_set1_ps(scalar_value);
-    __m256 aux;
+    pthread_t threads[NUM_THREADS];
+    Scalar_thread_args *args;
 
-    for (long i = 0; i < matrix->height*matrix->width; i += 8)
+    if (!(args = (Scalar_thread_args *)malloc(NUM_THREADS * sizeof(Scalar_thread_args))))
     {
-      aux = _mm256_loadu_ps(p);
-      aux = _mm256_mul_ps(aux, scalar);
-      _mm256_storeu_ps(p, aux);
-      p += 8;
+      fprintf(stderr, "Erro ao alocar memoria para thread args\n");
+      exit(3);
     }
+
+    // Cria as threads
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        args[i].thread_id = i;
+        args[i].scalar_value = scalar_value;
+        args[i].matrix = matrix;
+
+        pthread_create(&threads[i], NULL, aux_scalar_mult, &args[i]);
+    }
+
+    // Espera todas as threads terminarem
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+      pthread_join(threads[i], NULL);
+    }
+
+    free(args);
 
     return 1;
 }
