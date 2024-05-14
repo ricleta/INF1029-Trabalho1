@@ -5,5 +5,7 @@
 Comparação de velocidade de métodos para multiplicar matrizes
 
 ### Métodos usados
-- Percorrer matrizes linha por linha
-- Usando intel avx
+- Percorrendo matrizes por linha
+- Usando intel intrinsics e percorrendo matrizes por linha
+- Usando threads e percorrendo matrizes por linha
+- Usando intel intrinsics e threads, percorrendo matrizes por linha
